@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Italiana&display=swap');
+
+:root {
+  color-scheme: dark;
+  --rose: #ff7aad;
+  --rose-light: #ffd3e3;
+  --violet: #a68cff;
+}
+
+* { box-sizing: border-box; }
+
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+
+body {
+  background: #030108;
+  color: #fff;
+  font-family: "DM Sans", sans-serif;
+}
+
+.universe {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 72% 44%, rgba(74, 28, 110, .13), transparent 35%),
+    radial-gradient(circle at 23% 73%, rgba(42, 42, 122, .1), transparent 32%),
+    #030108;
+}
+
+.universe::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 28%, rgba(3, 1, 8, .22) 62%, rgba(0, 0, 3, .88) 100%);
+}
+
+#galaxy {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+#galaxy:active { cursor: grabbing; }
+
+.message {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: clamp(32px, 8vw, 140px);
+  width: min(485px, 40vw);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 18px;
+  color: rgba(255, 196, 220, .72);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .42em;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 36px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rose));
+}
+
+h1 {
+  margin: 0;
+  font-family: "Italiana", Georgia, serif;
+  font-size: clamp(48px, 5.6vw, 86px);
+  font-weight: 400;
+  line-height: .98;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+  text-shadow: 0 0 30px rgba(255,255,255,.08);
+}
+
+h1 em {
+  display: block;
+  color: var(--rose-light);
+  font-weight: 400;
+  text-shadow: 0 0 22px rgba(255, 104, 166, .3);
+}
+
+.subtitle {
+  margin: 28px 0 30px;
+  color: rgba(237, 226, 241, .55);
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.8;
+}
+
+button {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px 12px 13px;
+  border: 1px solid rgba(255, 151, 192, .22);
+  border-radius: 999px;
+  background: rgba(29, 11, 31, .38);
+  color: rgba(255, 232, 241, .8);
+  font: 400 10px/1 "DM Sans", sans-serif;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: border-color .3s, background .3s, transform .3s;
+}
+
+button:hover { transform: translateY(-2px); border-color: rgba(255, 151, 192, .55); background: rgba(63, 21, 54, .5); }
+button:focus-visible { outline: 2px solid #ffc3dc; outline-offset: 4px; }
+
+.button-heart {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffb2d0, #e5357d 72%);
+  box-shadow: 0 0 20px rgba(255, 65, 140, .5);
+  font-size: 12px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.signature {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, .22);
+  font-size: 8px;
+  letter-spacing: .36em;
+  white-space: nowrap;
+}
+
+.signature span { width: 28px; height: 1px; background: rgba(255,255,255,.12); }
+.hint { position: absolute; right: 30px; bottom: 24px; margin: 0; color: rgba(255,255,255,.18); font-size: 9px; letter-spacing: .1em; }
+
+@keyframes pulse { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.18); } 24% { transform: scale(1); } 36% { transform: scale(1.1); } }
+
+@media (max-width: 760px) {
+  .message { top: auto; bottom: 70px; left: 24px; width: calc(100% - 48px); transform: none; text-align: center; }
+  .eyebrow { justify-content: center; margin-bottom: 12px; }
+  h1 { font-size: clamp(42px, 14vw, 62px); }
+  .subtitle { margin: 16px 0 20px; font-size: 12px; }
+  .signature, .hint { display: none; }
+  .universe { min-height: 500px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .button-heart { animation: none; } }
