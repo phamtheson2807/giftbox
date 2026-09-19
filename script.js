@@ -1,7 +1,6 @@
 (() => {
   const canvas = document.getElementById('galaxy');
   const ctx = canvas.getContext('2d', { alpha: false });
-  const button = document.getElementById('loveButton');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const TAU = Math.PI * 2;
   let width, height, dpr, cx, cy, heartScale;
@@ -113,9 +112,9 @@
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    cx = width > 760 ? width * .72 : width * .5;
-    cy = width > 760 ? height * .31 : height * .22;
-    heartScale = Math.min(width > 760 ? width * .0155 : width * .022, height * .019);
+    cx = width * .5;
+    cy = width > 760 ? height * .3 : height * .25;
+    heartScale = Math.min(width > 760 ? width * .018 : width * .025, height * .021);
     wellX = cx;
     wellY = width > 760 ? height * .73 : height * .52;
     wellRadius = Math.min(width > 760 ? width * .2 : width * .42, height * .28);
@@ -239,8 +238,10 @@
       const progress = (p.progress + time * p.speed) % 1;
       const ease = progress * progress * (3 - 2 * progress);
       const originX = wellX + Math.cos(p.angle + time * .08) * p.radius * wellRadius * .7;
-      const x = originX * (1 - ease) + cx * ease + Math.sin(progress * TAU + p.phase) * p.sway * (1 - progress);
-      const y = wellY + (cy - wellY) * ease;
+      const heartTipY = cy + heartScale * 15.5;
+      const destinationX = cx + Math.sin(p.phase) * heartScale * 1.4;
+      const x = originX * (1 - ease) + destinationX * ease + Math.sin(progress * TAU + p.phase) * p.sway * (1 - progress);
+      const y = wellY + (heartTipY - wellY) * ease;
       const alpha = Math.sin(progress * Math.PI) * .82;
       const size = p.size * (1 + ease * .7);
       ctx.fillStyle = `rgba(255,170,211,${alpha})`;
@@ -284,28 +285,40 @@
   }
 
   function drawMeteors(time) {
-    if (!reducedMotion && Math.random() < .018 && meteors.length < 5) {
-      meteors.push({ x: random(width * .2, width * 1.05), y: random(-40, height * .32), length: random(55, 130), speed: random(5, 9), life: 1 });
+    if (!reducedMotion && Math.random() < .09 && meteors.length < 14) {
+      meteors.push({
+        x: random(width * .05, width * 1.12),
+        y: random(-80, height * .46),
+        length: random(75, 180),
+        speed: random(6, 12),
+        width: random(.8, 2.2),
+        life: 1
+      });
     }
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     for (let i = meteors.length - 1; i >= 0; i--) {
       const m = meteors[i];
-      m.x -= m.speed; m.y += m.speed * .7; m.life -= .012;
+      m.x -= m.speed; m.y += m.speed * .68; m.life -= .008;
       const gradient = ctx.createLinearGradient(m.x, m.y, m.x + m.length, m.y - m.length * .7);
       gradient.addColorStop(0, `rgba(255,245,252,${m.life})`);
       gradient.addColorStop(.15, `rgba(255,113,180,${m.life * .65})`);
       gradient.addColorStop(1, 'rgba(160,112,255,0)');
       ctx.strokeStyle = gradient;
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = m.width;
       ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + m.length, m.y - m.length * .7); ctx.stroke();
+      ctx.fillStyle = `rgba(255,245,252,${m.life})`;
+      ctx.shadowColor = '#ff8fc0';
+      ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.width * 1.25, 0, TAU); ctx.fill();
+      ctx.shadowBlur = 0;
       if (m.life <= 0 || m.y > height) meteors.splice(i, 1);
     }
     ctx.restore();
   }
 
   canvas.addEventListener('pointerdown', e => {
-    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    dragging = true; lastX = e.clientX; lastY = e.clientY; burst = 1;
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', e => {
@@ -316,12 +329,6 @@
   });
   canvas.addEventListener('pointerup', () => { dragging = false; });
   canvas.addEventListener('pointercancel', () => { dragging = false; });
-
-  button.addEventListener('click', () => {
-    burst = 1;
-    button.querySelector('span:last-child').textContent = 'Yêu em, đến vô cùng';
-    setTimeout(() => { button.querySelector('span:last-child').textContent = 'Chạm vào trái tim'; }, 2200);
-  });
 
   addEventListener('storage', event => {
     if (event.key === MESSAGE_KEY) orbitMessages = readMessages();
