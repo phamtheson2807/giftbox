@@ -39,6 +39,10 @@
   let savedPhoto = readPhoto();
   let lastTap = 0;
   let pointerMoved = false;
+  let nextMeteorShower = 1.4;
+  let meteorShowerEnds = 0;
+  let lastMeteorSpawn = -1;
+  let meteorDirection = 1;
 
   function readMessages() {
     try {
@@ -364,34 +368,60 @@
   }
 
   function drawMeteors(time) {
-    if (!reducedMotion && Math.random() < .09 && meteors.length < 14) {
-      meteors.push({
-        x: random(width * .05, width * 1.12),
-        y: random(-80, height * .46),
-        length: random(75, 180),
-        speed: random(6, 12),
-        width: random(.8, 2.2),
-        life: 1
-      });
+    if (!reducedMotion && time >= nextMeteorShower) {
+      meteorShowerEnds = time + 2.8;
+      nextMeteorShower = time + 10;
+      meteorDirection *= -1;
+      lastMeteorSpawn = -1;
     }
+
+    const showerActive = !reducedMotion && time < meteorShowerEnds;
+    const spawnDelay = lowPowerDevice ? .16 : .1;
+    const maxMeteors = lowPowerDevice ? 12 : 20;
+    if (showerActive && meteors.length < maxMeteors && (lastMeteorSpawn < 0 || time - lastMeteorSpawn >= spawnDelay)) {
+      const speed = random(560, 820);
+      const length = random(110, 230);
+      const fromLeft = meteorDirection > 0;
+      meteors.push({
+        x: fromLeft ? -length : width + length,
+        y: random(-50, height * .38),
+        vx: speed * meteorDirection,
+        vy: random(210, 340),
+        length,
+        width: random(1.2, 2.8),
+        born: time,
+        ttl: random(1.5, 2.25)
+      });
+      lastMeteorSpawn = time;
+    }
+
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     for (let i = meteors.length - 1; i >= 0; i--) {
       const m = meteors[i];
-      m.x -= m.speed; m.y += m.speed * .68; m.life -= .008;
-      const gradient = ctx.createLinearGradient(m.x, m.y, m.x + m.length, m.y - m.length * .7);
-      gradient.addColorStop(0, `rgba(255,245,252,${m.life})`);
-      gradient.addColorStop(.15, `rgba(255,113,180,${m.life * .65})`);
-      gradient.addColorStop(1, 'rgba(160,112,255,0)');
+      const age = time - m.born;
+      const frameStep = Math.min(.035, Math.max(0, time - (m.lastFrame || time - 1 / 60)));
+      m.lastFrame = time;
+      m.x += m.vx * frameStep;
+      m.y += m.vy * frameStep;
+      const alpha = Math.max(0, Math.min(1, age * 7, (m.ttl - age) * 2.5));
+      const velocityLength = Math.hypot(m.vx, m.vy);
+      const tailX = m.x - m.vx / velocityLength * m.length;
+      const tailY = m.y - m.vy / velocityLength * m.length;
+      const gradient = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
+      gradient.addColorStop(0, `rgba(255,252,255,${alpha})`);
+      gradient.addColorStop(.16, `rgba(255,126,186,${alpha * .88})`);
+      gradient.addColorStop(.52, `rgba(183,128,255,${alpha * .38})`);
+      gradient.addColorStop(1, 'rgba(123,92,255,0)');
       ctx.strokeStyle = gradient;
       ctx.lineWidth = m.width;
-      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + m.length, m.y - m.length * .7); ctx.stroke();
-      ctx.fillStyle = `rgba(255,245,252,${m.life})`;
+      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tailX, tailY); ctx.stroke();
+      ctx.fillStyle = `rgba(255,252,255,${alpha})`;
       ctx.shadowColor = '#ff8fc0';
-      ctx.shadowBlur = 12;
-      ctx.beginPath(); ctx.arc(m.x, m.y, m.width * 1.25, 0, TAU); ctx.fill();
+      ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.width * 1.7, 0, TAU); ctx.fill();
       ctx.shadowBlur = 0;
-      if (m.life <= 0 || m.y > height) meteors.splice(i, 1);
+      if (age >= m.ttl || m.y > height + 100 || m.x < -m.length * 2 || m.x > width + m.length * 2) meteors.splice(i, 1);
     }
     ctx.restore();
   }
