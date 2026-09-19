@@ -241,24 +241,31 @@
   function drawRisingStars(time) {
     for (const p of risingStars) {
       const progress = (p.progress + time * p.speed) % 1;
-      const ease = progress * progress * (3 - 2 * progress);
+      // Complete the flight before the particle lifecycle resets. The final
+      // portion is intentionally invisible so stars never pile up on the heart.
+      const travelProgress = Math.min(1, progress / .86);
+      const ease = travelProgress * travelProgress * (3 - 2 * travelProgress);
       const orbitAngle = p.angle + time * (.08 + p.radius * .025);
       const originX = wellX + Math.cos(orbitAngle) * p.radius * wellRadius * .72;
       const originY = wellY + Math.sin(orbitAngle) * p.radius * wellRadius * .2;
       const heartTipY = cy + heartScale * 15.5;
-      const destinationX = cx + Math.sin(p.phase) * heartScale * 1.4;
+      const destinationX = cx + Math.sin(p.phase) * heartScale * .65;
       const controlX = (originX + destinationX) * .5 + p.curve * wellRadius * .28;
       const controlY = (originY + heartTipY) * .5 - wellRadius * (.12 + p.radius * .12);
       const remain = 1 - ease;
       const x = remain * remain * originX + 2 * remain * ease * controlX + ease * ease * destinationX;
       const y = remain * remain * originY + 2 * remain * ease * controlY + ease * ease * heartTipY;
-      const alpha = Math.sin(progress * Math.PI) ** .65 * .92;
+      const fadeIn = Math.min(1, progress / .1);
+      const fadePhase = Math.max(0, Math.min(1, (progress - .58) / .28));
+      const fadeOut = 1 - fadePhase * fadePhase * (3 - 2 * fadePhase);
+      const alpha = fadeIn * fadeOut * .92;
       const twinkle = .72 + Math.sin(time * 5 + p.phase) * .28;
-      const size = p.size * (1 + ease * .48) * twinkle;
+      const arrivalShrink = 1 - Math.max(0, (progress - .58) / .28) * .72;
+      const size = p.size * (1 + ease * .28) * twinkle * Math.max(.18, arrivalShrink);
 
       // A short curved trail follows the actual flight path instead of the
       // previous vertical "pin" shape.
-      if (progress > .035 && progress < .97 && p.size > 1) {
+      if (progress > .035 && progress < .82 && alpha > .06 && p.size > 1) {
         const previousEase = Math.max(0, ease - .035);
         const previousRemain = 1 - previousEase;
         const tailX = previousRemain * previousRemain * originX + 2 * previousRemain * previousEase * controlX + previousEase * previousEase * destinationX;
