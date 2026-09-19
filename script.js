@@ -18,6 +18,22 @@
   const stars = [];
   const dust = [];
   const background = [];
+  const wellStars = [];
+  const risingStars = [];
+  const meteors = [];
+  const MESSAGE_KEY = 'giftbox-orbit-messages';
+  const defaultMessages = ['YÊU EM', 'MÃI BÊN NHAU', 'YOU ARE MY UNIVERSE'];
+  let orbitMessages = readMessages();
+  let wellX, wellY, wellRadius;
+
+  function readMessages() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(MESSAGE_KEY));
+      return Array.isArray(saved) && saved.length ? saved.slice(0, 8) : defaultMessages;
+    } catch (_) {
+      return defaultMessages;
+    }
+  }
 
   function heartPoint(t, layer) {
     const x = 16 * Math.sin(t) ** 3;
@@ -61,6 +77,33 @@
     background.push({ x: Math.random(), y: Math.random(), size: random(.2, 1.25), phase: random(0, TAU) });
   }
 
+  // A flattened stellar well below the heart.
+  for (let i = 0; i < 1800; i++) {
+    const radius = Math.sqrt(Math.random());
+    const angle = Math.random() * TAU;
+    wellStars.push({
+      radius,
+      angle,
+      speed: random(.035, .11) * (Math.random() < .5 ? -1 : 1),
+      lift: random(-1, 1),
+      size: random(.25, 1.2),
+      phase: random(0, TAU),
+      hue: Math.random() < .78 ? random(330, 355) : random(240, 285)
+    });
+  }
+
+  for (let i = 0; i < 170; i++) {
+    risingStars.push({
+      angle: Math.random() * TAU,
+      radius: Math.pow(Math.random(), .6),
+      progress: Math.random(),
+      speed: random(.035, .085),
+      sway: random(8, 32),
+      size: random(.35, 1.35),
+      phase: random(0, TAU)
+    });
+  }
+
   function resize() {
     dpr = Math.min(devicePixelRatio || 1, 2);
     width = innerWidth;
@@ -71,8 +114,11 @@
     canvas.style.height = height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     cx = width > 760 ? width * .72 : width * .5;
-    cy = width > 760 ? height * .47 : height * .33;
-    heartScale = Math.min(width > 760 ? width * .019 : width * .025, height * .026);
+    cy = width > 760 ? height * .31 : height * .22;
+    heartScale = Math.min(width > 760 ? width * .0155 : width * .022, height * .019);
+    wellX = cx;
+    wellY = width > 760 ? height * .73 : height * .52;
+    wellRadius = Math.min(width > 760 ? width * .2 : width * .42, height * .28);
   }
 
   function rotate(p, ry, rx) {
@@ -110,6 +156,8 @@
       ctx.fillRect(s.x * width, s.y * height, s.size, s.size);
     }
 
+    drawMeteors(time);
+
     const beatTime = time % 1.48;
     const beat = Math.exp(-Math.pow((beatTime - .08) / .075, 2)) * .075 +
                  Math.exp(-Math.pow((beatTime - .25) / .095, 2)) * .045;
@@ -118,6 +166,9 @@
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
+
+    drawStarWell(time);
+    drawRisingStars(time);
 
     for (const p of dust) {
       const spin = time * .035;
@@ -154,7 +205,103 @@
     }
     ctx.restore();
 
+    drawOrbitMessages(time);
+
     requestAnimationFrame(frame);
+  }
+
+  function drawStarWell(time) {
+    drawGlow(wellX, wellY, wellRadius * 1.18, 'rgba(124,35,108,0.12)');
+    for (const p of wellStars) {
+      const angle = p.angle + time * p.speed * (1.35 - p.radius);
+      const perspective = .48 + (Math.sin(angle) + 1) * .26;
+      const x = wellX + Math.cos(angle) * p.radius * wellRadius;
+      const y = wellY + Math.sin(angle) * p.radius * wellRadius * .32 + p.lift * 3;
+      const sparkle = .26 + (Math.sin(time * 2.4 + p.phase) + 1) * .34;
+      ctx.fillStyle = `hsla(${p.hue},100%,78%,${sparkle * perspective})`;
+      ctx.beginPath();
+      ctx.arc(x, y, p.size * perspective, 0, TAU);
+      ctx.fill();
+    }
+
+    const core = ctx.createRadialGradient(wellX, wellY, 0, wellX, wellY, wellRadius * .58);
+    core.addColorStop(0, 'rgba(255,151,197,.16)');
+    core.addColorStop(.35, 'rgba(117,40,126,.08)');
+    core.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    ctx.ellipse(wellX, wellY, wellRadius * .7, wellRadius * .2, 0, 0, TAU);
+    ctx.fill();
+  }
+
+  function drawRisingStars(time) {
+    for (const p of risingStars) {
+      const progress = (p.progress + time * p.speed) % 1;
+      const ease = progress * progress * (3 - 2 * progress);
+      const originX = wellX + Math.cos(p.angle + time * .08) * p.radius * wellRadius * .7;
+      const x = originX * (1 - ease) + cx * ease + Math.sin(progress * TAU + p.phase) * p.sway * (1 - progress);
+      const y = wellY + (cy - wellY) * ease;
+      const alpha = Math.sin(progress * Math.PI) * .82;
+      const size = p.size * (1 + ease * .7);
+      ctx.fillStyle = `rgba(255,170,211,${alpha})`;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, TAU);
+      ctx.fill();
+      if (p.size > 1.05) {
+        ctx.strokeStyle = `rgba(255,204,230,${alpha * .2})`;
+        ctx.beginPath();
+        ctx.moveTo(x, y + 2); ctx.lineTo(x, y + 12 + progress * 15); ctx.stroke();
+      }
+    }
+  }
+
+  function drawOrbitMessages(time) {
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const entries = orbitMessages.map((text, index) => {
+      const angle = time * .24 + index * TAU / orbitMessages.length;
+      return { text, angle, depth: Math.sin(angle) };
+    }).sort((a, b) => a.depth - b.depth);
+
+    for (const item of entries) {
+      const x = wellX + Math.cos(item.angle) * wellRadius * .92;
+      const y = wellY + Math.sin(item.angle) * wellRadius * .3 - 7;
+      const scale = .72 + (item.depth + 1) * .25;
+      const alpha = .25 + (item.depth + 1) * .3;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      ctx.font = '500 12px "DM Sans", sans-serif';
+      ctx.letterSpacing = '2px';
+      ctx.shadowColor = 'rgba(255,82,153,.9)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = `rgba(255,230,241,${alpha})`;
+      ctx.fillText(item.text, 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawMeteors(time) {
+    if (!reducedMotion && Math.random() < .018 && meteors.length < 5) {
+      meteors.push({ x: random(width * .2, width * 1.05), y: random(-40, height * .32), length: random(55, 130), speed: random(5, 9), life: 1 });
+    }
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const m = meteors[i];
+      m.x -= m.speed; m.y += m.speed * .7; m.life -= .012;
+      const gradient = ctx.createLinearGradient(m.x, m.y, m.x + m.length, m.y - m.length * .7);
+      gradient.addColorStop(0, `rgba(255,245,252,${m.life})`);
+      gradient.addColorStop(.15, `rgba(255,113,180,${m.life * .65})`);
+      gradient.addColorStop(1, 'rgba(160,112,255,0)');
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + m.length, m.y - m.length * .7); ctx.stroke();
+      if (m.life <= 0 || m.y > height) meteors.splice(i, 1);
+    }
+    ctx.restore();
   }
 
   canvas.addEventListener('pointerdown', e => {
@@ -175,6 +322,14 @@
     button.querySelector('span:last-child').textContent = 'Yêu em, đến vô cùng';
     setTimeout(() => { button.querySelector('span:last-child').textContent = 'Chạm vào trái tim'; }, 2200);
   });
+
+  addEventListener('storage', event => {
+    if (event.key === MESSAGE_KEY) orbitMessages = readMessages();
+  });
+  if ('BroadcastChannel' in window) {
+    const channel = new BroadcastChannel('giftbox-admin');
+    channel.addEventListener('message', () => { orbitMessages = readMessages(); });
+  }
 
   addEventListener('resize', resize);
   resize();
