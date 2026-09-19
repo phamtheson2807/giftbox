@@ -10,6 +10,10 @@
   const lovePhoto = document.getElementById('lovePhoto');
   const photoClose = document.getElementById('photoClose');
   const TAU = Math.PI * 2;
+  const lowPowerDevice = innerWidth < 760 || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+  const particleBudget = lowPowerDevice
+    ? { heart: 2100, dust: 420, well: 700, rising: 60, background: 130 }
+    : { heart: 2700, dust: 680, well: 1050, rising: 85, background: 180 };
   let width, height, dpr, cx, cy, heartScale;
   let rotationY = -0.22;
   let rotationX = -0.06;
@@ -81,7 +85,7 @@
   }
 
   // Dense heart surface: each particle receives a unique orbit and twinkle rhythm.
-  for (let i = 0; i < 3200; i++) {
+  for (let i = 0; i < particleBudget.heart; i++) {
     const t = Math.random() * TAU;
     const layer = random(-1, 1);
     const p = heartPoint(t, layer);
@@ -97,7 +101,7 @@
     });
   }
 
-  for (let i = 0; i < 1150; i++) {
+  for (let i = 0; i < particleBudget.dust; i++) {
     const arm = i % 3;
     const radius = 20 + Math.pow(Math.random(), .58) * 155;
     const angle = radius * .052 + arm * TAU / 3 + random(-.35, .35);
@@ -111,12 +115,12 @@
     });
   }
 
-  for (let i = 0; i < 220; i++) {
+  for (let i = 0; i < particleBudget.background; i++) {
     background.push({ x: Math.random(), y: Math.random(), size: random(.2, 1.25), phase: random(0, TAU) });
   }
 
   // A flattened stellar well below the heart.
-  for (let i = 0; i < 1800; i++) {
+  for (let i = 0; i < particleBudget.well; i++) {
     const radius = Math.sqrt(Math.random());
     const angle = Math.random() * TAU;
     wellStars.push({
@@ -130,7 +134,7 @@
     });
   }
 
-  for (let i = 0; i < 125; i++) {
+  for (let i = 0; i < particleBudget.rising; i++) {
     risingStars.push({
       angle: Math.random() * TAU,
       radius: Math.pow(Math.random(), .6),
@@ -144,7 +148,8 @@
   }
 
   function resize() {
-    dpr = Math.min(devicePixelRatio || 1, 2);
+    // 1.5 retains crisp particles without quadrupling work on high-DPI screens.
+    dpr = Math.min(devicePixelRatio || 1, 1.5);
     width = innerWidth;
     height = innerHeight;
     canvas.width = width * dpr;
@@ -221,15 +226,15 @@
       ctx.fill();
     }
 
-    const projected = stars.map(p => ({ ...p, r: rotate(p, rotationY, rotationX) }))
-      .sort((a, b) => a.r.z - b.r.z);
-
-    for (const p of projected) {
-      const perspective = 320 / (340 + p.r.z * heartScale * .17);
-      const x = cx + p.r.x * heartScale * pulseScale * perspective;
-      const y = cy + p.r.y * heartScale * pulseScale * perspective;
+    // Additive particles do not need depth sorting. Drawing directly avoids
+    // thousands of temporary objects plus an O(n log n) sort every frame.
+    for (const p of stars) {
+      const rotated = rotate(p, rotationY, rotationX);
+      const perspective = 320 / (340 + rotated.z * heartScale * .17);
+      const x = cx + rotated.x * heartScale * pulseScale * perspective;
+      const y = cy + rotated.y * heartScale * pulseScale * perspective;
       const twinkle = .38 + (Math.sin(time * p.speed * 3 + p.phase) + 1) * .31;
-      const depthLight = .58 + (p.r.z + 10) / 38;
+      const depthLight = .58 + (rotated.z + 10) / 38;
       const radius = p.size * perspective * (1 + burst * .45);
       ctx.fillStyle = `hsla(${p.hue},100%,${72 + twinkle * 20}%,${Math.min(1, twinkle * depthLight)})`;
       ctx.beginPath();
@@ -305,10 +310,7 @@
         const previousRemain = 1 - previousEase;
         const tailX = previousRemain * previousRemain * originX + 2 * previousRemain * previousEase * controlX + previousEase * previousEase * destinationX;
         const tailY = previousRemain * previousRemain * originY + 2 * previousRemain * previousEase * controlY + previousEase * previousEase * heartTipY;
-        const trail = ctx.createLinearGradient(tailX, tailY, x, y);
-        trail.addColorStop(0, `hsla(${p.hue},100%,75%,0)`);
-        trail.addColorStop(1, `hsla(${p.hue},100%,88%,${alpha * .42})`);
-        ctx.strokeStyle = trail;
+        ctx.strokeStyle = `hsla(${p.hue},100%,86%,${alpha * .28})`;
         ctx.lineWidth = Math.max(.35, size * .48);
         ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(x, y); ctx.stroke();
       }
