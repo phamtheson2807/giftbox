@@ -58,6 +58,30 @@ body {
   letter-spacing: .08em;
 }
 
+.photo-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  visibility: hidden;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(43, 8, 31, .35), rgba(2, 0, 7, .88) 65%);
+  backdrop-filter: blur(0);
+  transition: opacity .55s ease, visibility 0s linear .55s, backdrop-filter .7s ease;
+}
+
+.photo-reveal.is-open { visibility: visible; opacity: 1; backdrop-filter: blur(8px); transition-delay: 0s; }
+.love-photo { position: relative; z-index: 2; width: min(68vw, 620px); margin: 0; transform: scale(.08) rotate(-16deg); opacity: 0; filter: blur(18px); transition: transform .9s cubic-bezier(.16, 1.15, .3, 1), opacity .35s ease, filter .65s ease; }
+.photo-reveal.is-open .love-photo { transform: scale(1) rotate(0); opacity: 1; filter: blur(0); }
+.love-photo::before { content: ""; position: absolute; inset: -9px; z-index: -1; border: 1px solid rgba(255,190,217,.35); border-radius: 24px; box-shadow: 0 0 70px rgba(255,56,140,.28); }
+.love-photo img { display: block; width: 100%; max-height: 70vh; object-fit: contain; border-radius: 18px; background: #08030b; box-shadow: 0 28px 90px rgba(0,0,0,.7); }
+.love-photo figcaption { margin-top: 18px; color: rgba(255,225,238,.58); font: 400 13px "Italiana", Georgia, serif; letter-spacing: .13em; text-align: center; }
+.photo-burst { position: absolute; width: min(80vw, 760px); aspect-ratio: 1; border-radius: 50%; transform: scale(.05); opacity: 0; background: repeating-conic-gradient(from 0deg, transparent 0 8deg, rgba(255,91,158,.14) 9deg, transparent 11deg 20deg); filter: blur(1px); transition: transform 1.1s cubic-bezier(.12,.7,.2,1), opacity .5s ease; }
+.photo-reveal.is-open .photo-burst { transform: scale(1.35) rotate(18deg); opacity: 1; }
+.photo-close { position: absolute; top: 24px; right: 26px; z-index: 3; width: 42px; height: 42px; padding: 0; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; color: rgba(255,255,255,.75); background: rgba(0,0,0,.25); font: 300 25px/1 sans-serif; cursor: pointer; }
+.photo-close:hover { color: #fff; border-color: rgba(255,255,255,.45); }
+
 .signature {
   position: absolute;
   left: 50%;
@@ -101,4 +125,5 @@ body {
 @media (max-width: 760px) {
   .signature, .hint { display: none; }
   .universe { min-height: 500px; }
+  .love-photo { width: min(82vw, 520px); }
 }

@@ -6,6 +6,9 @@
     return;
   }
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const photoReveal = document.getElementById('photoReveal');
+  const lovePhoto = document.getElementById('lovePhoto');
+  const photoClose = document.getElementById('photoClose');
   const TAU = Math.PI * 2;
   let width, height, dpr, cx, cy, heartScale;
   let rotationY = -0.22;
@@ -25,9 +28,13 @@
   const risingStars = [];
   const meteors = [];
   const MESSAGE_KEY = 'giftbox-orbit-messages';
+  const PHOTO_KEY = 'giftbox-love-photo';
   const defaultMessages = ['YÊU EM', 'MÃI BÊN NHAU', 'YOU ARE MY UNIVERSE'];
   let orbitMessages = readMessages();
   let wellX, wellY, wellRadius;
+  let savedPhoto = readPhoto();
+  let lastTap = 0;
+  let pointerMoved = false;
 
   function readMessages() {
     try {
@@ -36,6 +43,34 @@
     } catch (_) {
       return defaultMessages;
     }
+  }
+
+  function readPhoto() {
+    try { return localStorage.getItem(PHOTO_KEY) || ''; }
+    catch (_) { return ''; }
+  }
+
+  function isInsideHeart(x, y) {
+    const dx = (x - cx) / (heartScale * 18);
+    const dy = (y - cy) / (heartScale * 19);
+    return dx * dx + dy * dy < 1.15;
+  }
+
+  function revealPhoto() {
+    savedPhoto = readPhoto();
+    if (!savedPhoto) return;
+    lovePhoto.src = savedPhoto;
+    photoReveal.classList.remove('is-open');
+    // Restart the burst animation even after repeated reveals.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      photoReveal.classList.add('is-open');
+      photoReveal.setAttribute('aria-hidden', 'false');
+    }));
+  }
+
+  function hidePhoto() {
+    photoReveal.classList.remove('is-open');
+    photoReveal.setAttribute('aria-hidden', 'true');
   }
 
   function heartPoint(t, layer) {
@@ -360,17 +395,30 @@
   }
 
   canvas.addEventListener('pointerdown', e => {
-    dragging = true; lastX = e.clientX; lastY = e.clientY; burst = 1;
+    dragging = true; pointerMoved = false; lastX = e.clientX; lastY = e.clientY; burst = 1;
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', e => {
     if (!dragging) return;
+    if (Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY) > 3) pointerMoved = true;
     targetY += (e.clientX - lastX) * .006;
     targetX = Math.max(-.7, Math.min(.7, targetX + (e.clientY - lastY) * .004));
     lastX = e.clientX; lastY = e.clientY;
   });
-  canvas.addEventListener('pointerup', () => { dragging = false; });
+  canvas.addEventListener('pointerup', e => {
+    dragging = false;
+    const now = performance.now();
+    if (!pointerMoved && lastTap > 0 && now - lastTap < 360 && isInsideHeart(e.clientX, e.clientY)) {
+      revealPhoto();
+      lastTap = 0;
+    } else {
+      lastTap = pointerMoved ? 0 : now;
+    }
+  });
   canvas.addEventListener('pointercancel', () => { dragging = false; });
+  photoClose.addEventListener('click', hidePhoto);
+  photoReveal.addEventListener('click', e => { if (e.target === photoReveal) hidePhoto(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape') hidePhoto(); });
 
   // Start rendering before optional cross-tab integrations are attached. This
   // keeps the visual experience alive even if a browser blocks storage APIs.
@@ -380,9 +428,13 @@
 
   addEventListener('storage', event => {
     if (event.key === MESSAGE_KEY) orbitMessages = readMessages();
+    if (event.key === PHOTO_KEY) savedPhoto = readPhoto();
   });
   if ('BroadcastChannel' in window) {
     const channel = new BroadcastChannel('giftbox-admin');
-    channel.addEventListener('message', () => { orbitMessages = readMessages(); });
+    channel.addEventListener('message', event => {
+      if (event.data?.type === 'photo-updated') savedPhoto = readPhoto();
+      else orbitMessages = readMessages();
+    });
   }
 })();

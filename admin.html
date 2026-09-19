@@ -33,9 +33,29 @@
         <p>XEM TRƯỚC QUỸ ĐẠO</p>
         <div id="preview" class="preview" aria-live="polite"></div>
       </div>
+
+      <form id="photoForm" class="photo-form">
+        <div class="photo-heading">
+          <div>
+            <p>ẢNH BÍ MẬT</p>
+            <h2>Ảnh bung ra từ trái tim</h2>
+          </div>
+          <span>Click đúp vào trái tim để xem</span>
+        </div>
+        <label class="photo-picker" for="photoInput">
+          <img id="photoPreview" alt="Ảnh xem trước" />
+          <span class="picker-placeholder" id="photoPlaceholder"><b>＋</b> Chọn một tấm ảnh</span>
+        </label>
+        <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" />
+        <div class="actions">
+          <button class="primary" type="submit">Lưu ảnh vào trái tim <span>♥</span></button>
+          <button class="secondary" id="removePhoto" type="button">Xóa ảnh</button>
+        </div>
+        <p class="photo-status" id="photoStatus" role="status" aria-live="polite"></p>
+      </form>
     </section>
     <p class="note">Dữ liệu được lưu trên trình duyệt này và cập nhật ngay ở trang thiên hà đang mở.</p>
   </main>
-  <script src="admin.js?v=20260919-2"></script>
+  <script src="admin.js?v=20260919-5"></script>
 </body>
 </html>

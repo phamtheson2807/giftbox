@@ -14,6 +14,8 @@ Sau đó mở <http://localhost:8000> trong trình duyệt. Kéo chuột hoặc 
 
 Mở <http://localhost:8000/admin.html>, nhập tối đa 8 lời nhắn (mỗi dòng là một lời nhắn) rồi chọn **Gửi vào thiên hà**. Nếu trang chính đang mở trong một tab khác, nội dung quanh hố sao sẽ được cập nhật ngay.
 
+Trang quản trị cũng cho phép chọn một ảnh JPEG, PNG hoặc WebP. Ảnh được tự động thu nhỏ trước khi lưu; tại trang chính, click hoặc chạm nhanh hai lần vào trái tim để ảnh bung ra và nhấn `Esc`, nút `×` hoặc vùng nền để đóng.
+
 Phiên bản GitHub Pages lưu lời nhắn bằng `localStorage`, vì vậy trang quản trị và trang chính cần được mở trên cùng trình duyệt và thiết bị. Đây là giải pháp không cần máy chủ, phù hợp với hosting tĩnh; nếu cần quản trị nội dung cho mọi khách truy cập, dự án sẽ cần kết nối thêm một dịch vụ cơ sở dữ liệu.
 
 ## Đưa lên GitHub Pages
