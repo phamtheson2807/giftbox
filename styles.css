@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Italiana&display=swap');
+
+:root {
+  color-scheme: dark;
+  --rose: #ff7aad;
+  --rose-light: #ffd3e3;
+  --violet: #a68cff;
+}
+
+* { box-sizing: border-box; }
+
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+
+body {
+  background: #030108;
+  color: #fff;
+  font-family: "DM Sans", sans-serif;
+}
+
+.universe {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 72% 44%, rgba(74, 28, 110, .13), transparent 35%),
+    radial-gradient(circle at 23% 73%, rgba(42, 42, 122, .1), transparent 32%),
+    #030108;
+}
+
+.universe::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 28%, rgba(3, 1, 8, .22) 62%, rgba(0, 0, 3, .88) 100%);
+}
+
+#galaxy {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+#galaxy:active { cursor: grabbing; }
+
+.canvas-error {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 220, 235, .8);
+  font-size: 13px;
+  letter-spacing: .08em;
+}
+
+.signature {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, .22);
+  font-size: 8px;
+  letter-spacing: .36em;
+  white-space: nowrap;
+}
+
+.signature span { width: 28px; height: 1px; background: rgba(255,255,255,.12); }
+.hint { position: absolute; right: 30px; bottom: 24px; margin: 0; color: rgba(255,255,255,.18); font-size: 9px; letter-spacing: .1em; }
+
+.admin-link {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  z-index: 3;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: rgba(255, 211, 227, .28);
+  border: 1px solid rgba(255, 211, 227, .12);
+  border-radius: 50%;
+  text-decoration: none;
+  transition: .25s ease;
+}
+
+.admin-link:hover, .admin-link:focus-visible {
+  color: var(--rose-light);
+  border-color: rgba(255, 211, 227, .5);
+  box-shadow: 0 0 20px rgba(255, 93, 158, .2);
+  outline: none;
+}
+
+@media (max-width: 760px) {
+  .signature, .hint { display: none; }
+  .universe { min-height: 500px; }
+}
