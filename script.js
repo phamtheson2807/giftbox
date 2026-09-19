@@ -39,7 +39,7 @@
   let savedPhoto = readPhoto();
   let lastTap = 0;
   let pointerMoved = false;
-  let nextMeteorShower = 1.4;
+  let nextMeteorShower = .8;
   let meteorShowerEnds = 0;
   let lastMeteorSpawn = -1;
   let meteorDirection = 1;
@@ -369,18 +369,19 @@
 
   function drawMeteors(time) {
     if (!reducedMotion && time >= nextMeteorShower) {
-      meteorShowerEnds = time + 2.8;
+      meteorShowerEnds = time + 3.4;
       nextMeteorShower = time + 10;
       meteorDirection *= -1;
       lastMeteorSpawn = -1;
     }
 
     const showerActive = !reducedMotion && time < meteorShowerEnds;
-    const spawnDelay = lowPowerDevice ? .16 : .1;
-    const maxMeteors = lowPowerDevice ? 12 : 20;
+    const spawnDelay = lowPowerDevice ? .14 : .085;
+    const maxMeteors = lowPowerDevice ? 15 : 24;
     if (showerActive && meteors.length < maxMeteors && (lastMeteorSpawn < 0 || time - lastMeteorSpawn >= spawnDelay)) {
-      const speed = random(560, 820);
-      const length = random(110, 230);
+      const featured = Math.random() < .28;
+      const speed = random(540, 760);
+      const length = featured ? random(280, 430) : random(170, 310);
       const fromLeft = meteorDirection > 0;
       meteors.push({
         x: fromLeft ? -length : width + length,
@@ -388,9 +389,10 @@
         vx: speed * meteorDirection,
         vy: random(210, 340),
         length,
-        width: random(1.2, 2.8),
+        width: featured ? random(3.8, 5.8) : random(2.2, 4),
         born: time,
-        ttl: random(1.5, 2.25)
+        ttl: random(2.2, 3.15),
+        featured
       });
       lastMeteorSpawn = time;
     }
@@ -413,13 +415,21 @@
       gradient.addColorStop(.16, `rgba(255,126,186,${alpha * .88})`);
       gradient.addColorStop(.52, `rgba(183,128,255,${alpha * .38})`);
       gradient.addColorStop(1, 'rgba(123,92,255,0)');
+      // Wide translucent under-stroke makes the shower readable behind the
+      // dense galaxy, while the gradient core keeps each meteor crisp.
+      ctx.strokeStyle = `rgba(255,67,150,${alpha * (m.featured ? .24 : .14)})`;
+      ctx.lineWidth = m.width * 4.5;
+      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tailX, tailY); ctx.stroke();
       ctx.strokeStyle = gradient;
       ctx.lineWidth = m.width;
       ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tailX, tailY); ctx.stroke();
       ctx.fillStyle = `rgba(255,252,255,${alpha})`;
       ctx.shadowColor = '#ff8fc0';
-      ctx.shadowBlur = 18;
-      ctx.beginPath(); ctx.arc(m.x, m.y, m.width * 1.7, 0, TAU); ctx.fill();
+      ctx.shadowBlur = m.featured ? 30 : 20;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.width * 2.1, 0, TAU); ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${alpha * .95})`;
+      ctx.fillRect(m.x - m.width * 3, m.y - .6, m.width * 6, 1.2);
+      ctx.fillRect(m.x - .6, m.y - m.width * 3, 1.2, m.width * 6);
       ctx.shadowBlur = 0;
       if (age >= m.ttl || m.y > height + 100 || m.x < -m.length * 2 || m.x > width + m.length * 2) meteors.splice(i, 1);
     }
