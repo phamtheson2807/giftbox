@@ -1,6 +1,10 @@
 (() => {
   const canvas = document.getElementById('galaxy');
   const ctx = canvas.getContext('2d', { alpha: false });
+  if (!ctx) {
+    canvas.insertAdjacentHTML('afterend', '<p class="canvas-error">Trình duyệt không hỗ trợ Canvas 2D.</p>');
+    return;
+  }
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const TAU = Math.PI * 2;
   let width, height, dpr, cx, cy, heartScale;
@@ -91,15 +95,16 @@
     });
   }
 
-  for (let i = 0; i < 170; i++) {
+  for (let i = 0; i < 125; i++) {
     risingStars.push({
       angle: Math.random() * TAU,
       radius: Math.pow(Math.random(), .6),
       progress: Math.random(),
-      speed: random(.035, .085),
-      sway: random(8, 32),
-      size: random(.35, 1.35),
-      phase: random(0, TAU)
+      speed: random(.028, .068),
+      curve: random(-1, 1),
+      size: random(.45, 1.65),
+      phase: random(0, TAU),
+      hue: random(325, 355)
     });
   }
 
@@ -237,21 +242,51 @@
     for (const p of risingStars) {
       const progress = (p.progress + time * p.speed) % 1;
       const ease = progress * progress * (3 - 2 * progress);
-      const originX = wellX + Math.cos(p.angle + time * .08) * p.radius * wellRadius * .7;
+      const orbitAngle = p.angle + time * (.08 + p.radius * .025);
+      const originX = wellX + Math.cos(orbitAngle) * p.radius * wellRadius * .72;
+      const originY = wellY + Math.sin(orbitAngle) * p.radius * wellRadius * .2;
       const heartTipY = cy + heartScale * 15.5;
       const destinationX = cx + Math.sin(p.phase) * heartScale * 1.4;
-      const x = originX * (1 - ease) + destinationX * ease + Math.sin(progress * TAU + p.phase) * p.sway * (1 - progress);
-      const y = wellY + (heartTipY - wellY) * ease;
-      const alpha = Math.sin(progress * Math.PI) * .82;
-      const size = p.size * (1 + ease * .7);
-      ctx.fillStyle = `rgba(255,170,211,${alpha})`;
+      const controlX = (originX + destinationX) * .5 + p.curve * wellRadius * .28;
+      const controlY = (originY + heartTipY) * .5 - wellRadius * (.12 + p.radius * .12);
+      const remain = 1 - ease;
+      const x = remain * remain * originX + 2 * remain * ease * controlX + ease * ease * destinationX;
+      const y = remain * remain * originY + 2 * remain * ease * controlY + ease * ease * heartTipY;
+      const alpha = Math.sin(progress * Math.PI) ** .65 * .92;
+      const twinkle = .72 + Math.sin(time * 5 + p.phase) * .28;
+      const size = p.size * (1 + ease * .48) * twinkle;
+
+      // A short curved trail follows the actual flight path instead of the
+      // previous vertical "pin" shape.
+      if (progress > .035 && progress < .97 && p.size > 1) {
+        const previousEase = Math.max(0, ease - .035);
+        const previousRemain = 1 - previousEase;
+        const tailX = previousRemain * previousRemain * originX + 2 * previousRemain * previousEase * controlX + previousEase * previousEase * destinationX;
+        const tailY = previousRemain * previousRemain * originY + 2 * previousRemain * previousEase * controlY + previousEase * previousEase * heartTipY;
+        const trail = ctx.createLinearGradient(tailX, tailY, x, y);
+        trail.addColorStop(0, `hsla(${p.hue},100%,75%,0)`);
+        trail.addColorStop(1, `hsla(${p.hue},100%,88%,${alpha * .42})`);
+        ctx.strokeStyle = trail;
+        ctx.lineWidth = Math.max(.35, size * .48);
+        ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(x, y); ctx.stroke();
+      }
+
+      ctx.fillStyle = `hsla(${p.hue},100%,78%,${alpha * .18})`;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 4.2, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = `hsla(${p.hue},100%,91%,${alpha})`;
       ctx.beginPath();
       ctx.arc(x, y, size, 0, TAU);
       ctx.fill();
-      if (p.size > 1.05) {
-        ctx.strokeStyle = `rgba(255,204,230,${alpha * .2})`;
+
+      if (p.size > 1.25 && twinkle > .82) {
+        ctx.strokeStyle = `rgba(255,238,247,${alpha * .65})`;
+        ctx.lineWidth = .55;
         ctx.beginPath();
-        ctx.moveTo(x, y + 2); ctx.lineTo(x, y + 12 + progress * 15); ctx.stroke();
+        ctx.moveTo(x - size * 3.2, y); ctx.lineTo(x + size * 3.2, y);
+        ctx.moveTo(x, y - size * 3.2); ctx.lineTo(x, y + size * 3.2);
+        ctx.stroke();
       }
     }
   }
@@ -330,6 +365,12 @@
   canvas.addEventListener('pointerup', () => { dragging = false; });
   canvas.addEventListener('pointercancel', () => { dragging = false; });
 
+  // Start rendering before optional cross-tab integrations are attached. This
+  // keeps the visual experience alive even if a browser blocks storage APIs.
+  addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(frame);
+
   addEventListener('storage', event => {
     if (event.key === MESSAGE_KEY) orbitMessages = readMessages();
   });
@@ -337,8 +378,4 @@
     const channel = new BroadcastChannel('giftbox-admin');
     channel.addEventListener('message', () => { orbitMessages = readMessages(); });
   }
-
-  addEventListener('resize', resize);
-  resize();
-  requestAnimationFrame(frame);
 })();
