@@ -42,7 +42,6 @@
   let nextMeteorShower = .15;
   let meteorShowerEnds = 0;
   let lastMeteorSpawn = -1;
-  let meteorDirection = 1;
 
   function readMessages() {
     try {
@@ -204,6 +203,9 @@
       ctx.fillRect(s.x * width, s.y * height, s.size, s.size);
     }
 
+    // Meteors belong to the distant sky, behind the heart and its star stream.
+    drawMeteors(time);
+
     const beatTime = time % 1.48;
     const beat = Math.exp(-Math.pow((beatTime - .08) / .075, 2)) * .075 +
                  Math.exp(-Math.pow((beatTime - .25) / .095, 2)) * .045;
@@ -252,9 +254,6 @@
     ctx.restore();
 
     drawOrbitMessages(time);
-    // Keep meteors above the dense heart/galaxy layers so their bright heads
-    // and tails can never disappear behind thousands of particles.
-    drawMeteors(time);
 
     requestAnimationFrame(frame);
   }
@@ -361,31 +360,27 @@
 
   function drawMeteors(time) {
     if (time >= nextMeteorShower) {
-      meteorShowerEnds = time + 4.5;
+      meteorShowerEnds = time + 3.2;
       nextMeteorShower = time + 10;
-      meteorDirection *= -1;
       lastMeteorSpawn = -1;
     }
 
     const showerActive = time < meteorShowerEnds;
     const limitedMotion = lowPowerDevice || reducedMotion;
-    const spawnDelay = limitedMotion ? .15 : .075;
-    const maxMeteors = limitedMotion ? 12 : 28;
+    const spawnDelay = limitedMotion ? .38 : .24;
+    const maxMeteors = limitedMotion ? 5 : 9;
     if (showerActive && meteors.length < maxMeteors && (lastMeteorSpawn < 0 || time - lastMeteorSpawn >= spawnDelay)) {
-      const featured = Math.random() < .28;
-      const length = featured ? random(280, 430) : random(170, 310);
-      const fromLeftCorner = meteorDirection > 0;
       meteors.push({
-        x: fromLeftCorner ? random(-width * .05, width * .2) : random(width * .8, width * 1.05),
-        y: random(-24, 4),
-        vx: random(240, 410) * meteorDirection,
-        vy: random(650, 900),
-        length,
-        width: featured ? random(3.8, 5.8) : random(2.2, 4),
+        x: random(-40, width * .24),
+        y: random(-35, -5),
+        vx: random(360, 500),
+        vy: random(500, 680),
+        length: random(75, 145),
+        width: random(.75, 1.55),
         born: time,
-        ttl: random(1.55, 2.35),
-        featured,
-        sparkPhase: random(0, TAU)
+        ttl: random(1.8, 2.55),
+        sparkPhase: random(0, TAU),
+        twinkleSpeed: random(15, 24)
       });
       lastMeteorSpawn = time;
     }
@@ -399,43 +394,33 @@
       m.lastFrame = time;
       m.x += m.vx * frameStep;
       m.y += m.vy * frameStep;
-      const twinkle = .72 + Math.sin(time * 19 + m.sparkPhase) * .28;
-      const alpha = Math.max(0, Math.min(1, age * 8, (m.ttl - age) * 3)) * twinkle;
+      const twinkleWave = (Math.sin(time * m.twinkleSpeed + m.sparkPhase) + 1) * .5;
+      const twinkle = .08 + twinkleWave * twinkleWave * .92;
+      const alpha = Math.max(0, Math.min(1, age * 7, (m.ttl - age) * 3)) * twinkle;
       const velocityLength = Math.hypot(m.vx, m.vy);
       const tailX = m.x - m.vx / velocityLength * m.length;
       const tailY = m.y - m.vy / velocityLength * m.length;
       const gradient = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
       gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
-      gradient.addColorStop(.12, `rgba(255,218,237,${alpha * .96})`);
-      gradient.addColorStop(.4, `rgba(255,94,173,${alpha * .65})`);
-      gradient.addColorStop(.7, `rgba(183,128,255,${alpha * .28})`);
+      gradient.addColorStop(.14, `rgba(255,218,237,${alpha * .9})`);
+      gradient.addColorStop(.48, `rgba(255,94,173,${alpha * .48})`);
+      gradient.addColorStop(.75, `rgba(183,128,255,${alpha * .18})`);
       gradient.addColorStop(1, 'rgba(123,92,255,0)');
-      // Wide translucent under-stroke makes the shower readable behind the
-      // dense galaxy, while the gradient core keeps each meteor crisp.
-      ctx.strokeStyle = `rgba(255,91,174,${alpha * (m.featured ? .34 : .23)})`;
-      ctx.lineWidth = m.width * 5.4;
+      ctx.strokeStyle = `rgba(255,91,174,${alpha * .16})`;
+      ctx.lineWidth = m.width * 2.8;
       ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tailX, tailY); ctx.stroke();
       ctx.strokeStyle = gradient;
       ctx.lineWidth = m.width;
       ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(tailX, tailY); ctx.stroke();
       ctx.fillStyle = `rgba(255,252,255,${alpha})`;
       ctx.shadowColor = '#ff8fc0';
-      ctx.shadowBlur = m.featured ? 36 : 25;
-      ctx.beginPath(); ctx.arc(m.x, m.y, m.width * 2.35, 0, TAU); ctx.fill();
-      ctx.fillStyle = `rgba(255,255,255,${alpha * .95})`;
-      ctx.fillRect(m.x - m.width * 3, m.y - .6, m.width * 6, 1.2);
-      ctx.fillRect(m.x - .6, m.y - m.width * 3, 1.2, m.width * 6);
-      // Small flashes along the tail echo the sparkling points in the heart.
-      for (let spark = 1; spark <= 3; spark++) {
-        const distance = (.18 + spark * .19) * (1 + Math.sin(time * 12 + m.sparkPhase + spark) * .08);
-        const sparkX = m.x + (tailX - m.x) * distance;
-        const sparkY = m.y + (tailY - m.y) * distance;
-        const sparkAlpha = alpha * (1 - distance) * .78;
-        const sparkSize = Math.max(.7, m.width * (.48 - spark * .06));
-        ctx.fillStyle = `rgba(255,240,249,${sparkAlpha})`;
-        ctx.beginPath(); ctx.arc(sparkX, sparkY, sparkSize, 0, TAU); ctx.fill();
-        ctx.fillRect(sparkX - sparkSize * 2.4, sparkY - .35, sparkSize * 4.8, .7);
-        ctx.fillRect(sparkX - .35, sparkY - sparkSize * 2.4, .7, sparkSize * 4.8);
+      ctx.shadowBlur = 9;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.width * 1.45, 0, TAU); ctx.fill();
+      if (twinkle > .62) {
+        const flare = m.width * (1.8 + twinkle * 1.4);
+        ctx.fillStyle = `rgba(255,255,255,${alpha * .82})`;
+        ctx.fillRect(m.x - flare, m.y - .35, flare * 2, .7);
+        ctx.fillRect(m.x - .35, m.y - flare, .7, flare * 2);
       }
       ctx.shadowBlur = 0;
       if (age >= m.ttl || m.y > height + 100 || m.x < -m.length * 2 || m.x > width + m.length * 2) meteors.splice(i, 1);
