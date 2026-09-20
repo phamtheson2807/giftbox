@@ -10,6 +10,8 @@
   const lovePhoto = document.getElementById('lovePhoto');
   const photoClose = document.getElementById('photoClose');
   const TAU = Math.PI * 2;
+  const METEOR_INTERVAL = 10;
+  const METEOR_DURATION = 3.8;
   const lowPowerDevice = innerWidth < 760 || (navigator.deviceMemory && navigator.deviceMemory <= 4);
   const particleBudget = lowPowerDevice
     ? { heart: 2100, dust: 420, well: 700, rising: 60, background: 130 }
@@ -92,15 +94,19 @@
     const t = Math.random() * TAU;
     const layer = random(-1, 1);
     const p = heartPoint(t, layer);
-    const fill = Math.sqrt(Math.random());
+    const rim = i < particleBudget.heart * .3;
+    const fill = rim ? random(.94, 1.015) : Math.pow(Math.random(), .42);
     stars.push({
       x: p.x * fill + random(-.18, .18),
       y: p.y * fill + random(-.18, .18),
       z: p.z * fill + random(-.6, .6),
-      size: random(.35, 1.45),
+      size: rim ? random(.55, 1.55) : random(.3, 1.3),
       phase: random(0, TAU),
       speed: random(.7, 2.1),
-      hue: random(322, 353)
+      hue: rim ? random(334, 350) : random(318, 355),
+      light: rim ? random(84, 96) : random(70, 88),
+      rim,
+      flare: Math.random() < (rim ? .22 : .07)
     });
   }
 
@@ -210,7 +216,8 @@
     const beat = Math.exp(-Math.pow((beatTime - .08) / .075, 2)) * .075 +
                  Math.exp(-Math.pow((beatTime - .25) / .095, 2)) * .045;
     const pulseScale = 1 + beat + burst * .08;
-    drawGlow(cx, cy, heartScale * (23 + burst * 8), 'rgba(217,42,126,0.18)');
+    drawGlow(cx, cy, heartScale * (23 + burst * 8), 'rgba(217,42,126,0.2)');
+    drawGlow(cx, cy + heartScale * 1.5, heartScale * (13 + beat * 28), 'rgba(255,104,170,0.11)');
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
@@ -240,14 +247,16 @@
       const twinkle = .38 + (Math.sin(time * p.speed * 3 + p.phase) + 1) * .31;
       const depthLight = .58 + (rotated.z + 10) / 38;
       const radius = p.size * perspective * (1 + burst * .45);
-      ctx.fillStyle = `hsla(${p.hue},100%,${72 + twinkle * 20}%,${Math.min(1, twinkle * depthLight)})`;
+      const starAlpha = Math.min(1, twinkle * depthLight * (p.rim ? 1.12 : .92));
+      ctx.fillStyle = `hsla(${p.hue},${p.rim ? 78 : 100}%,${Math.min(98, p.light + twinkle * 7)}%,${starAlpha})`;
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, TAU);
       ctx.fill();
-      if (p.size > 1.28 && twinkle > .78) {
-        ctx.globalAlpha = twinkle * .5;
-        ctx.fillRect(x - radius * 3, y - .25, radius * 6, .5);
-        ctx.fillRect(x - .25, y - radius * 3, .5, radius * 6);
+      if (p.flare && twinkle > .79) {
+        ctx.globalAlpha = twinkle * (p.rim ? .68 : .42);
+        const flare = radius * (p.rim ? 3.8 : 2.8);
+        ctx.fillRect(x - flare, y - .3, flare * 2, .6);
+        ctx.fillRect(x - .3, y - flare, .6, flare * 2);
         ctx.globalAlpha = 1;
       }
     }
@@ -360,8 +369,8 @@
 
   function drawMeteors(time) {
     if (time >= nextMeteorShower) {
-      meteorShowerEnds = time + 3.2;
-      nextMeteorShower = time + 10;
+      meteorShowerEnds = time + METEOR_DURATION;
+      nextMeteorShower = time + METEOR_INTERVAL;
       lastMeteorSpawn = -1;
     }
 
@@ -370,15 +379,20 @@
     const spawnDelay = limitedMotion ? .38 : .24;
     const maxMeteors = limitedMotion ? 5 : 9;
     if (showerActive && meteors.length < maxMeteors && (lastMeteorSpawn < 0 || time - lastMeteorSpawn >= spawnDelay)) {
+      const startX = random(-80, width * .08);
+      const startY = random(-45, -8);
+      const travelTime = random(2.5, 3.25);
+      const targetX = width + random(60, 150);
+      const targetY = height + random(45, 110);
       meteors.push({
-        x: random(-40, width * .24),
-        y: random(-35, -5),
-        vx: random(360, 500),
-        vy: random(500, 680),
+        x: startX,
+        y: startY,
+        vx: (targetX - startX) / travelTime,
+        vy: (targetY - startY) / travelTime,
         length: random(75, 145),
         width: random(.75, 1.55),
         born: time,
-        ttl: random(1.8, 2.55),
+        ttl: travelTime + .2,
         sparkPhase: random(0, TAU),
         twinkleSpeed: random(15, 24)
       });
