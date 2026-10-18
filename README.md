@@ -1,6 +1,6 @@
 # Vũ Trụ Tình Yêu
 
-Một trải nghiệm web animation mô phỏng trái tim 3D đang đập, được kết thành từ hàng ngàn ngôi sao lấp lánh giữa thiên hà.
+Một món quà web tương tác dành cho ngày Phụ nữ Việt Nam 20/10: bó hoa biến thành những bức ảnh kỷ niệm, thiệp lời chúc và trái tim sao đang đập.
 
 ## Chạy trên máy
 
@@ -8,13 +8,13 @@ Một trải nghiệm web animation mô phỏng trái tim 3D đang đập, đư�
 python3 -m http.server 8000
 ```
 
-Sau đó mở <http://localhost:8000> trong trình duyệt. Kéo chuột hoặc vuốt để xoay trái tim và nhấn nút để tạo hiệu ứng yêu thương.
+Sau đó mở <http://localhost:8000> trong trình duyệt. Nhấn giữ bó hoa để mở ảnh, đọc thiệp rồi tiếp tục tới màn trái tim và dòng ảnh kỷ niệm.
 
-## Quản trị lời nhắn
+## Quản trị lời chúc và ảnh
 
-Mở <http://localhost:8000/admin.html>, nhập tối đa 8 lời nhắn (mỗi dòng là một lời nhắn) rồi chọn **Gửi vào thiên hà**. Nếu trang chính đang mở trong một tab khác, nội dung quanh hố sao sẽ được cập nhật ngay.
+Mở <http://localhost:8000/admin.html>, nhập tối đa 8 dòng lời chúc rồi chọn **Lưu lời chúc**. Nếu trang chính đang mở trong một tab khác, nội dung thiệp sẽ được cập nhật ngay.
 
-Trang quản trị cũng cho phép chọn một ảnh JPEG, PNG hoặc WebP. Ảnh được tự động thu nhỏ trước khi lưu; tại trang chính, click hoặc chạm nhanh hai lần vào trái tim để ảnh bung ra và nhấn `Esc`, nút `×` hoặc vùng nền để đóng.
+Trang quản trị cho phép chọn tối đa 6 ảnh JPEG, PNG hoặc WebP và nhập các dòng lời chúc. Ảnh sẽ xuất hiện trong bó hoa sau thao tác nhấn giữ, rồi bay bên dưới trái tim ở màn cuối; các dòng chữ sẽ được trình bày trên tấm thiệp 20/10.
 
 Phiên bản GitHub Pages lưu lời nhắn bằng `localStorage`, vì vậy trang quản trị và trang chính cần được mở trên cùng trình duyệt và thiết bị. Đây là giải pháp không cần máy chủ, phù hợp với hosting tĩnh; nếu cần quản trị nội dung cho mọi khách truy cập, dự án sẽ cần kết nối thêm một dịch vụ cơ sở dữ liệu.
 

@@ -9,53 +9,53 @@
 </head>
 <body>
   <main class="admin-shell">
-    <a class="back" href="index.html">← Xem thiên hà</a>
+    <a class="back" href="index.html">← Xem món quà</a>
     <section class="panel">
       <div class="brand" aria-hidden="true">♥</div>
-      <p class="eyebrow">GIFTBOX · CONTROL ROOM</p>
-      <h1>Gửi lời nhắn<br />vào <em>vũ trụ</em></h1>
-      <p class="intro">Mỗi dòng sẽ trở thành một lời nhắn bay quanh hố sao. Bạn có thể nhập tối đa 8 dòng.</p>
+      <p class="eyebrow">20/10 · GIFT CONTROL</p>
+      <h1>Viết lời chúc<br />dành cho <em>em</em></h1>
+      <p class="intro">Mỗi dòng sẽ trở thành một đoạn trên tấm thiệp 20/10. Bạn có thể nhập tối đa 8 dòng.</p>
 
       <form id="messageForm">
-        <label for="messages">Lời nhắn của bạn</label>
+        <label for="messages">Lời chúc của bạn</label>
         <textarea id="messages" rows="8" maxlength="320" placeholder="YÊU EM&#10;MÃI BÊN NHAU&#10;YOU ARE MY UNIVERSE"></textarea>
         <div class="form-meta">
           <span id="lineCount">0 / 8 lời nhắn</span>
           <span id="saveStatus" role="status" aria-live="polite"></span>
         </div>
         <div class="actions">
-          <button class="primary" type="submit">Gửi vào thiên hà <span>✦</span></button>
+          <button class="primary" type="submit">Lưu lời chúc <span>✦</span></button>
           <button class="secondary" id="resetButton" type="button">Khôi phục mặc định</button>
         </div>
       </form>
 
       <div class="preview-block">
-        <p>XEM TRƯỚC QUỸ ĐẠO</p>
+        <p>XEM TRƯỚC NỘI DUNG THIỆP</p>
         <div id="preview" class="preview" aria-live="polite"></div>
       </div>
 
       <form id="photoForm" class="photo-form">
         <div class="photo-heading">
           <div>
-            <p>ẢNH BÍ MẬT</p>
-            <h2>Ảnh bung ra từ trái tim</h2>
+            <p>ẢNH KỶ NIỆM</p>
+            <h2>Ảnh nở trong bó hoa</h2>
           </div>
-          <span>Click đúp vào trái tim để xem</span>
+          <span>Chọn tối đa 6 ảnh</span>
         </div>
         <label class="photo-picker" for="photoInput">
-          <img id="photoPreview" alt="Ảnh xem trước" />
-          <span class="picker-placeholder" id="photoPlaceholder"><b>＋</b> Chọn một tấm ảnh</span>
+          <div id="photoPreview" class="photo-gallery" aria-label="Ảnh xem trước"></div>
+          <span class="picker-placeholder" id="photoPlaceholder"><b>＋</b> Chọn ảnh của bạn</span>
         </label>
-        <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" />
+        <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" multiple />
         <div class="actions">
-          <button class="primary" type="submit">Lưu ảnh vào trái tim <span>♥</span></button>
-          <button class="secondary" id="removePhoto" type="button">Xóa ảnh</button>
+          <button class="primary" type="submit">Lưu ảnh kỷ niệm <span>♥</span></button>
+          <button class="secondary" id="removePhoto" type="button">Xóa tất cả ảnh</button>
         </div>
         <p class="photo-status" id="photoStatus" role="status" aria-live="polite"></p>
       </form>
     </section>
-    <p class="note">Dữ liệu được lưu trên trình duyệt này và cập nhật ngay ở trang thiên hà đang mở.</p>
+    <p class="note">Dữ liệu được lưu trên trình duyệt này và cập nhật ngay ở món quà 20/10 đang mở.</p>
   </main>
-  <script src="admin.js?v=20260919-5"></script>
+  <script src="admin.js?v=20261018-1"></script>
 </body>
 </html>
